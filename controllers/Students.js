@@ -1,27 +1,9 @@
 const fs = require("fs");
+const Student = require("../Models/Students");
 //var path = require('path');
 
 //var directories = path.dirname('../data/');
-//console.log(directories, "parent path");
-
-// Define the students array at the top of the file
-let students = [
-  {
-    id: 1,
-    name: "Sam",
-    Dept: "CS",
-  },
-  {
-    id: 2,
-    name: "Akib",
-    Dept: "MCS",
-  },
-  {
-    id: 3,
-    name: "John",
-    Dept: "BCA",
-  },
-];
+//console.log(directories, "parent path");0
 
 exports.getStudents = (req, res) => {
   let studentsJsonFile = "./data/students.json";
@@ -37,6 +19,44 @@ exports.getStudents = (req, res) => {
 
   res.json(students);
 };
+
+
+exports.getAll = async (req, res)=>{
+  try {
+    const students = await Student.find();
+    res.status(200).json({
+      message: "Student Add Successfully!",
+      students
+    })
+    
+  } catch (error) {
+    res.status(404).json({
+      message: error.message
+    })
+  }
+}
+
+
+
+exports.addStudent = async (req, res)=>{
+  const { id, name, Dept } = req.body;
+
+  try {
+    const newStud = new Student({ id, name, Dept });
+    const result = await newStud.save();
+
+    res.status(200).json({
+      message: "Student Add Successfully!",
+      result
+    })
+    
+  } catch (error) {
+    res.status(404).json({
+      message: error.message
+    })
+    
+  }
+}
 
 //add
 exports.add = (req, res) => {
@@ -72,31 +92,51 @@ exports.add = (req, res) => {
 
 //update
 exports.update = (req, res) => {
+  let studentsJsonFile = "./data/students.json";
+
+  let students = fs.readFileSync(studentsJsonFile, "utf8");
+
+  if (students.length === 0) {
+    return res.status(404).json({ error: "No students found to update!" });
+  } else {
+    students = JSON.parse(students);
+  }
+
   const { id, name, Dept } = req.body;
 
-  // Validate input
   if (!id) {
     return res
       .status(400)
       .json({ error: "Student ID is required for updating!" });
   }
 
-  // Find the student by ID
   const studentIndex = students.findIndex((student) => student.id === id);
 
   if (studentIndex === -1) {
     return res.status(404).json({ error: `Student with ID ${id} not found!` });
   }
 
-  // Update the student's details
   if (name) students[studentIndex].name = name;
   if (Dept) students[studentIndex].Dept = Dept;
+
+  fs.writeFileSync(studentsJsonFile, JSON.stringify(students));
 
   res.status(200).json({
     message: "Student updated successfully",
     student: students[studentIndex],
   });
 };
+
+
+
+
+
+
+
+
+
+
+
 
 //delete
 exports.delete = (req, res) => {

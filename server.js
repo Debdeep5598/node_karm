@@ -1,27 +1,27 @@
 const express = require("express");
-const bodyParser = require("body-parser")
+const bodyParser = require("body-parser");
 
-const StudentsRoutes = require("./Routes/Students")
-const TeachersRoutes = require("./Routes/Teachers");
-const app = express()
+const mongoose = require("mongoose");
+const routes = require("./Routes/index.js"); 
+const app = express();
 
 const port = 3000;
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+mongoose.connect('mongodb://127.0.0.1:27017/LMS');
 
-// parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to NodeExpress!");
+});
 
-app.get("/", (req, res)=>{
-    res.send("welcome come to nodeExpress");
-})
+app.use("/", routes);
 
-app.use("/students", StudentsRoutes)
-app.use("/teachers", TeachersRoutes)
-
-app.listen(port, (err)=>{
-    console.log(`Server runing on port ${port}`)
-
-})
+app.listen(port, (err) => {
+  if (!err) {
+    console.log(`Server running on port ${port}`);
+  } else {
+    console.error("Error starting server:", err);
+  }
+});
