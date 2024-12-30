@@ -23,7 +23,7 @@ exports.getStudents = (req, res) => {
 
 exports.getAll = async (req, res)=>{
   try {
-    const students = await Student.find();
+    const students = await Student.find().populate("course");
     res.status(200).json({
       message: "Student Add Successfully!",
       students
@@ -38,25 +38,120 @@ exports.getAll = async (req, res)=>{
 
 
 
-exports.addStudent = async (req, res)=>{
-  const { id, name, Dept } = req.body;
+exports.addStudent = async (req, res) => {
+  const { id, name, Dept, email, phone,course } = req.body;
 
   try {
-    const newStud = new Student({ id, name, Dept });
-    const result = await newStud.save();
+    const newStudent = new Student({ id, name, Dept, email, phone, course });
+    const result = await newStudent.save();
+
+    res.status(201).json({
+      message: "Student added successfully!",
+      result,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0]; 
+      res.status(400).json({
+        message: `Duplicate value for ${field}: "${error.keyValue[field]}". Please use a unique ${field}.`,
+      });
+    } else {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  }
+};
+
+
+
+
+
+exports.updateStudent = async (req, res) => {
+  const { id, name, Dept, email, phone } = req.body;
+
+  try {
+    const updatedStudent = await Student.findOneAndUpdate(
+      { id }, 
+      { name, Dept, email, phone }, 
+      { new: true, runValidators: true, context: 'query' } 
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        message: `Student with ID ${id} not found!`,
+      });
+    }
 
     res.status(200).json({
-      message: "Student Add Successfully!",
-      result
-    })
-    
+      message: "Student updated successfully!",
+      updatedStudent,
+    });
   } catch (error) {
-    res.status(404).json({
-      message: error.message
-    })
-    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      res.status(400).json({
+        message: `Duplicate value for ${field}: "${error.keyValue[field]}". Please use a unique ${field}.`,
+      });
+    } else {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
   }
+};
+
+
+
+
+
+
+exports.deleteStudent = async (req, res) => {
+  const { id } = req.body; 
+
+  try {
+    if (!id) {
+      return res.status(400).json({
+        message: "Student ID is required for deletion!",
+      });
+    }
+
+    const deletedStudent = await Student.findOneAndDelete({ id });
+
+    if (!deletedStudent) {
+      return res.status(404).json({
+        message: `Student with ID ${id} not found!`,
+      });
+    }
+
+    res.status(200).json({
+      message: "Student deleted successfully!",
+      deletedStudent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+
+
+
+exports.getById = async(req, res)=>{
+
+  const {id}= req.params
+  console.log(id);
+
+  const result = await Student.find({id})
+  res
+    .status(201)
+    .json({ message: "Student details", result });
 }
+
+
+
 
 //add
 exports.add = (req, res) => {
@@ -89,6 +184,10 @@ exports.add = (req, res) => {
     .status(201)
     .json({ message: "Student added successfully", student: newStudent });
 };
+
+
+
+
 
 //update
 exports.update = (req, res) => {

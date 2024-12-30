@@ -1,23 +1,49 @@
 const mongoose = require("mongoose");
 
 const StudentSchema = new mongoose.Schema({
-    id:{
-        type: Number,
-        require: true
-    },
-    name: {
-        type:String,
-        require: true
-    },
-    Dept: {
-        type: String
-    },
-    date: {
-        type: Date,
-        default: Date.now
-    }
+  id: {
+    type: Number,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  Dept: {
+    type: String,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [
+      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+      "Please enter a valid email address",
+    ],
+  },
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [
+      /^[6-9]\d{9}$/,
+      "Please enter a valid 10-digit phone number starting with 6-9",
+    ],
+  },
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-})
-const Student = mongoose.model("Student", StudentSchema)
+StudentSchema.pre("save", function (next) {
+  console.log(this.name);
+  next();
+});
 
-module.exports = Student 
+const Student = mongoose.model("Student", StudentSchema);
+
+module.exports = Student;
